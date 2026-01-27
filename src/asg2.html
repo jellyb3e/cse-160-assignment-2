@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>doodly thing</title>
+  </head>
+
+  <body onload="main()">
+    <p>
+      Julia Manou <br>
+      jmanou@ucsc.edu <br>
+      Notes to Grader: <br>
+      hi !!! <br>
+    </p>
+    <canvas id="webgl" width="400" height="400">
+    Please use a browser that supports "canvas"
+    </canvas>
+    <img src="drawing.jpeg" style="height: 400px;">
+
+    <script src="../lib/webgl-utils.js"></script>
+    <script src="../lib/webgl-debug.js"></script>
+    <script src="../lib/cuon-utils.js"></script>
+    <script src="asg2.js"></script>
+    <script src="Point.js"></script>
+    <script src="Triangle.js"></script>
+    <script src="Circle.js"></script>
+    <script src="Paintbrush.js"></script>
+    <script src="Picture.js"></script>
+
+    <div>
+      <input type="button" id="point-button" value="Point"/>
+      <input type="button" id="triangle-button" value="Triangle"/>
+      <input type="button" id="circle-button" value="Circle"/>
+      <input type="button" id="brush-button" value="Paintbrush"/>
+    </div>
+    <div>
+      <label for="R">R</label>
+      <input type="range" id="color-r" name="R" min="0" max="255" value="0"/>
+    </div>
+    <div>
+      <label for="G">G</label>
+      <input type="range" id="color-g" name="G" min="0" max="255" value="0"/>
+    </div>
+    <div>
+      <label for="B">B</label>
+      <input type="range" id="color-b" name="B" min="0" max="255" value="0"/>
+    </div>
+    <div>
+      <label for="size">Size</label>
+      <input type="range" id="size" name="size" min="2" max="30" value="2"/>
+    </div>
+    <div>
+      <label for="segments">Segments (for Circle only)</label>
+      <input type="range" id="segments" name="size" min="3" max="20" value="3"/>
+    </div>
+    <div style="display:inline">
+      <br>
+      <input type="button" id="draw-button" value="Draw Image"/>
+      <div style="display:inline; margin-left:20px;">
+        Show Initials:
+        <label for="initials-on">True</label>
+        <input type="radio" name="initials" id="initials-on" value="True"/>
+        <input type="radio" name="initials" id="initials-off" value="False" checked/>
+        <label for="initials-off">False</label>
+      </div>
+    </div>
+    <div>
+      <br>
+      <input type="button" id="clear-button" value="Clear Canvas"/>
+    </div>
+
+  </body>
+</html>
