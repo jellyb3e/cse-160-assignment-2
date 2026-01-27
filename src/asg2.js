@@ -32,7 +32,6 @@ let showingInitials = false;
 function main() {
   setupWebGL();
   connectVariablesToGLSL();
-  fetchDocumentElements();
 
   // Register function (event handler) to be called on a mouse press
   canvas.onmousedown = click;
@@ -49,28 +48,7 @@ function click(ev) {
   if (ev.buttons != 1) return;
 
   [x,y] = convertCoordinatesEventToGL(ev);
-  let color = [r.value/255, g.value/255, b.value/255, 1.0];
-  let size = size_slider.value;
-  let segments = seg_slider.value;
 
-  let shape;
-  switch(type) {
-    case 'point':
-      shape = new Point([x,y],size,color);
-      break;
-    case 'triangle':
-      shape = new Triangle([x,y],size,color);
-      break;
-    case 'circle':
-      shape = new Circle([x,y],size,color,segments);
-      break;
-    case 'brush':
-      shape = new Brush([x,y],size,color,segments);
-      break;
-    default:
-      console.log("what gong on");
-      break;
-  }
   shapes_list.push(shape);
   renderAllShapes();
 }
@@ -137,30 +115,5 @@ function renderAllShapes() {
 }
 
 function clearScreen() {
-  shapes_list = [];
   renderAllShapes();
-}
-
-function fetchDocumentElements() {
-  r = document.getElementById("color-r");
-  g = document.getElementById("color-g");
-  b = document.getElementById("color-b");
-  size_slider = document.getElementById("size");
-  seg_slider = document.getElementById("segments");
-  
-  document.getElementById("clear-button").addEventListener("click", clearScreen);
-  document.getElementById("point-button").addEventListener("click", () => { type = 'point' });
-  document.getElementById("triangle-button").addEventListener("click", () => { type = 'triangle' });
-  document.getElementById("circle-button").addEventListener("click", () => { type = 'circle' });
-  document.getElementById("brush-button").addEventListener("click", () => { type = 'brush' });
-  document.getElementById("draw-button").addEventListener("click", () => {
-    shapes_list.push(new Squirrel(showingInitials));
-    renderAllShapes();
-  });
-  document.getElementById("initials-on").addEventListener("click", () => {
-    showingInitials = true;
-  });
-  document.getElementById("initials-off").addEventListener("click", () => {
-    showingInitials = false;
-  });
 }
