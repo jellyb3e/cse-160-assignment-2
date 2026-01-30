@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>doodly thing</title>
+    <title>Blocky Animal</title>
   </head>
 
   <body onload="main()">
@@ -16,14 +16,31 @@
     Please use a browser that supports "canvas"
     </canvas>
 
+    <div id="perf-stats">
+      hi :]
+    </div>
+    <div>
+      Camera Angle <input type="range" id="angle-range" min="-90" max="90" value = "0">
+    </div>
+    <div>
+      Back Leg, Seg 1 Angle <input type="range" id="legB_j1-range" min="0" max="90" value = "0">
+    </div>
+    <div>
+      Back Leg, Seg 2 Angle <input type="range" id="legB_j2-range" min="0" max="90" value = "0">
+    </div>
+    <div>
+      Animation: 
+      <button type="button" id="anim-on">ON</button>
+      <button type="button" id="anim-off">OFF</button>
+    </div>
+
+
     <script src="../lib/webgl-utils.js"></script>
     <script src="../lib/webgl-debug.js"></script>
     <script src="../lib/cuon-utils.js"></script>
+    <script src="../lib/cuon-matrix.js"></script>
+    <script src="Cube.js"></script>
     <script src="asg2.js"></script>
-
-    <div>
-      hi :]
-    </div>
-
+    <script src="anims.js"></script>
   </body>
 </html>
