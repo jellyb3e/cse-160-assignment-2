@@ -210,6 +210,7 @@ function renderAllShapes() {
   cube.matrix.scale(.15,length,.15);
   cube.render();
 
+  /*
   // bl leg segment 4 (hoof)
   cube.color = [0,0,0,1];
   cube.matrix.set(m_parent);
@@ -218,7 +219,7 @@ function renderAllShapes() {
   length = 2.15;
   cube.matrix.scale(.15,length,.15);
   cube.render();
-
+*/
   /**/
   //#endregion
   
@@ -443,15 +444,6 @@ function loadShapes() {
   cube.matrix.scale(.15,length,.15);
   cube.render();
 
-  // bl leg segment 4 (hoof)
-  cube.color = [0,0,0,1];
-  cube.matrix.set(m_parent);
-  cube.matrix.translate(0,-(length-.055),.0001);
-  cube.matrix.rotate(-45 + angles.legBL_j4,0,0,1);
-  length = 2.15;
-  cube.matrix.scale(.15,length,.15);
-  cube.render();
-
   /**/
   //#endregion
   
@@ -641,7 +633,6 @@ function sendTextToHTML(text,htmlID) {
 function tick() {
   g_seconds = performance.now()/1000.0-g_startTime;
   animate();
-  render();
   requestAnimationFrame(tick);
 }
 
@@ -652,14 +643,17 @@ function animate() {
   }
 
   const speed = g_seconds * 8;
-  for (let joint in anims[g_currAnim]) {
+  const s = Math.sin(speed);
+  const c = Math.cos(speed);
+  for (let joint in anims[g_currAnim].joints) {
     const jointInfo = anims[g_currAnim].joints[joint];
     const max = jointInfo.max;
     const min = jointInfo.min;
 
-    const curve = (jointInfo.curve == "sin") ? Math.sin(speed) : Math.cos(speed);
+    const curve = (jointInfo.curve == "sin") ? s : c;
     angles[joint] = (((curve) + 1) / 2) * (max - min) + min;
   }
+  renderAllShapes();
 }
 
 function resetAnimation() {
@@ -668,5 +662,6 @@ function resetAnimation() {
       angles[joint] = 0;
     }
     g_animReset = true;
+    renderAllShapes();
   }
 }
