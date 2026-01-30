@@ -5,10 +5,46 @@ class Cube {
         this.matrix = new Matrix4();
         this.topW = topWidth;
         this.bottomW = bottomWidth;
+        this.vertexBuffer = gl.createBuffer();
+        this.loadShape();
+    }
+
+    loadShape() {
+        const vertices = [];
+
+        const t_half = this.topW/2;
+        const b_half = this.bottomW/2;
+
+        vertices.push(...[-b_half,-1,-b_half,   t_half,0,-b_half,   b_half,-1,-b_half]);
+        vertices.push(...[-b_half,-1,-b_half,  -t_half,0,-b_half,   t_half,0,-b_half]);
+
+        vertices.push(...[-b_half,-1,b_half,   b_half,-1,b_half,   t_half,0,b_half]);
+        vertices.push(...[-b_half,-1,b_half,   t_half,0,b_half,  -t_half,0,b_half]);
+
+        vertices.push(...[-b_half,-1,-b_half,  -b_half,-1,b_half,  -t_half,0,t_half]);
+        vertices.push(...[-b_half,-1,-b_half,  -t_half,0,t_half,  -t_half,0,-t_half]);
+        
+        vertices.push(...[b_half,-1,-b_half,   t_half,0,t_half,   b_half,-1,b_half]);
+        vertices.push(...[b_half,-1,-b_half,   t_half,0,-t_half,   t_half,0,t_half]);
+
+        vertices.push(...[-t_half,0,-t_half,   t_half,0,-t_half,   t_half,0, t_half]);
+        vertices.push(...[-t_half,0,-t_half,   t_half,0, t_half,  -t_half,0, t_half]);
+
+        vertices.push(...[-b_half,-1,-b_half,   b_half,-1,-b_half,   b_half,-1,b_half]);
+        vertices.push(...[-b_half,-1,-b_half,  -b_half,-1,b_half,   b_half,-1,b_half]);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(a_Position);
     }
 
     render() {
-        drawCube(this.matrix,this.color,this.topW,this.bottomW)
+        gl.uniform4f(u_FragColor,this.color[0],this.color[1],this.color[2],this.color[3]);
+        gl.uniformMatrix4fv(u_ModelMatrix, false, this.matrix.elements);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+        gl.drawArrays(gl.TRIANGLES, 0, 36);
     }
 }
 
@@ -22,38 +58,29 @@ function drawCube(M,color,topWidth = 1.0, bottomWidth = 1.0) {
     // front
     drawTriangle3D([-b_half,-1,-b_half,   t_half,0,-b_half,   b_half,-1,-b_half]);
     drawTriangle3D([-b_half,-1,-b_half,  -t_half,0,-b_half,   t_half,0,-b_half]);
-    //g_vertices.push([-b_half,-1,-b_half,   t_half,0,-b_half,   b_half,-1,-b_half]);
-    //g_vertices.push([-b_half,-1,-b_half,  -t_half,0,-b_half,   t_half,0,-b_half]);
-
+    
     // back
     drawTriangle3D([-b_half,-1,b_half,   b_half,-1,b_half,   t_half,0,b_half]);
     drawTriangle3D([-b_half,-1,b_half,   t_half,0,b_half,  -t_half,0,b_half]);
-    //g_vertices.push([-b_half,-1,b_half,   b_half,-1,b_half,   t_half,0,b_half]);
-    //g_vertices.push([-b_half,-1,b_half,   t_half,0,b_half,  -t_half,0,b_half]);
 
     // left
     drawTriangle3D([-b_half,-1,-b_half,  -b_half,-1,b_half,  -t_half,0,t_half]);
     drawTriangle3D([-b_half,-1,-b_half,  -t_half,0,t_half,  -t_half,0,-t_half]);
-    //g_vertices.push([-b_half,-1,-b_half,  -b_half,-1,b_half,  -t_half,0,t_half]);
-    //g_vertices.push([-b_half,-1,-b_half,  -t_half,0,t_half,  -t_half,0,-t_half]);
+    
 
     // right
     drawTriangle3D([ b_half,-1,-b_half,   t_half,0,t_half,   b_half,-1,b_half]);
     drawTriangle3D([ b_half,-1,-b_half,   t_half,0,-t_half,   t_half,0,t_half]);
-    //g_vertices.push([ b_half,-1,-b_half,   t_half,0,t_half,   b_half,-1,b_half]);
-    //g_vertices.push([ b_half,-1,-b_half,   t_half,0,-t_half,   t_half,0,t_half]);
+    
 
     // top
     drawTriangle3D([-t_half,0,-t_half,   t_half,0,-t_half,   t_half,0, t_half]);
     drawTriangle3D([-t_half,0,-t_half,   t_half,0, t_half,  -t_half,0, t_half]);
-    //g_vertices.push([-t_half,0,-t_half,   t_half,0,-t_half,   t_half,0, t_half]);
-    //g_vertices.push([-t_half,0,-t_half,   t_half,0, t_half,  -t_half,0, t_half]);
+    
 
     // bottom
     drawTriangle3D([-b_half,-1,-b_half,   b_half,-1,-b_half,   b_half,-1,b_half]);
     drawTriangle3D([-b_half,-1,-b_half,  -b_half,-1,b_half,   b_half,-1,b_half]);
-    //g_vertices.push([-b_half,-1,-b_half,   b_half,-1,-b_half,   b_half,-1,b_half]);
-    //g_vertices.push([-b_half,-1,-b_half,  -b_half,-1,b_half,   b_half,-1,b_half]);
 }
 
 
