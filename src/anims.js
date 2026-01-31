@@ -42,6 +42,11 @@ const anims = {
         "max": 20 / 1,
         "curve": "cos"
       },
+      "legBL_j4": {
+        "min": 0,
+        "max": 0,
+        "curve": "sin"
+      },
       // BACK RIGHT LEG
       "legBR_j1": {
         "min": -40 / 2,
@@ -56,6 +61,11 @@ const anims = {
       "legBR_j3": {
         "min": -20 / 2,
         "max": 20 / 1,
+        "curve": "sin"
+      },
+      "legBR_j4": {
+        "min": 0,
+        "max": 0,
         "curve": "sin"
       },
       // FRONT LEFT LEG
@@ -74,6 +84,11 @@ const anims = {
         "max": 30 / 2,
         "curve": "sin"
       },
+      "legFL_j4": {
+        "min": 0,
+        "max": 0,
+        "curve": "sin"
+      },
       // FRONT RIGHT LEG
       "legFR_j1": {
         "min": -10 / 2,
@@ -89,6 +104,11 @@ const anims = {
         "min": -10 / 2,
         "max": 30 / 2,
         "curve": "sin"
+      },
+      "legFR_j4": {
+        "min": 0,
+        "max": 0,
+        "curve": "sin"
       }
     } 
   }
@@ -103,6 +123,7 @@ const angles = {
   "legBL_j1": 0,
   "legBL_j2": 0,
   "legBL_j3": 0,
+  "legBL_j4": 0,
   "legBR_j1": 0,
   "legBR_j2": 0,
   "legBR_j3": 0,

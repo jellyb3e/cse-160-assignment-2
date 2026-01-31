@@ -26,7 +26,8 @@ let duration;
 
 const g_shapes_list = [];
 const g_vertices = [];
-let g_globalAngle = 0;
+let g_globalAngleY = 0;
+let g_globalAngleX = 0;
 let g_animate = true;
 let g_animReset = false;
 let g_startTime = performance.now();
@@ -46,28 +47,19 @@ function main() {
   // Specify the color for clearing <canvas>
   gl.clearColor(0.55, 0.67, 0.71, 1.0);
 
-  g_rotMat.setRotate(g_globalAngle,0,1,0);
-  gl.uniformMatrix4fv(u_GlobalRotateMatrix,false,g_rotMat.elements);
+  updateGlobalRot();
 
-  renderAllShapes();
-
-  //loadShapes();
-  //render();
-
-  // SHITE
   requestAnimationFrame(tick);
 }
 
-/*
 function click(ev) {
   if (ev.buttons != 1) return;
 
   [x,y] = convertCoordinatesEventToGL(ev);
 
-  g_shapes_list.push(shape);
   renderAllShapes();
 }
-*/
+
 function setupWebGL() {
   // Retrieve <canvas> element
   canvas = document.getElementById('webgl');
@@ -133,14 +125,20 @@ function convertCoordinatesEventToGL(ev) {
 }
 
 function addActionsForHtmlUI() {
-  const angRange = document.getElementById('angle-range');
+  const angRangeX = document.getElementById('angle-range-x');
+  const angRangeY = document.getElementById('angle-range-y');
   const legB_j1Range = document.getElementById('legB_j1-range');
   const legB_j2Range = document.getElementById('legB_j2-range');
 
-  angRange.addEventListener('input', () => {
-    g_globalAngle = angRange.value;
-    g_rotMat.setRotate(g_globalAngle,0,1,0);
-    gl.uniformMatrix4fv(u_GlobalRotateMatrix,false,g_rotMat.elements);
+  angRangeX.addEventListener('input', () => {
+    g_globalAngleX = angRangeX.value;
+    updateGlobalRot();
+    renderAllShapes();
+  });
+
+  angRangeY.addEventListener('input', () => {
+    g_globalAngleY = angRangeY.value;
+    updateGlobalRot();
     renderAllShapes();
   });
 
@@ -158,6 +156,26 @@ function addActionsForHtmlUI() {
 
   document.getElementById("anim-on").onclick = () => {g_animate = true; g_animReset = false;};
   document.getElementById("anim-off").onclick = () => {g_animate = false};
+
+  canvas.addEventListener("mousemove", (ev) => {
+    if (ev.buttons != 1) return;
+    dx = convertCoordinatesEventToGL(ev)[0] - lastX;
+    g_globalAngleY -= dx * 90;
+    if (Math.abs(g_globalAngleY) >= 360) { g_globalAngleY -= Math.sign(g_globalAngleY) * 360 }
+    updateGlobalRot();
+    lastX = convertCoordinatesEventToGL(ev)[0];
+  });
+
+  canvas.addEventListener("mousedown", (ev) => {
+    if (ev.buttons != 1) return;
+    lastX = convertCoordinatesEventToGL(ev)[0];
+  });
+}
+
+function updateGlobalRot() {
+  g_rotMat.setRotate(g_globalAngleY,0,1,0);
+  g_rotMat.rotate(g_globalAngleX,1,0,0);
+  gl.uniformMatrix4fv(u_GlobalRotateMatrix,false,g_rotMat.elements);
 }
 
 function createGeometries() {
@@ -170,6 +188,15 @@ function createGeometries() {
 function renderAllShapes() {
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+  //#region GROUND
+  cube.color = [86/255.0, 168/255.0, 108/255.0, 1.0];
+  cube.matrix.translate(0,-.7,0);
+  cube.matrix.scale(g_zoom,g_zoom,g_zoom);
+  cube.matrix.scale(5,.5,5);
+  cube.render();
+  cube.matrix.setIdentity();
+  //#endregion
 
   //#region BODY
   cube.color = [1.0,1.0,1.0,1.0];
@@ -190,7 +217,7 @@ function renderAllShapes() {
   cube.matrix.translate(.4,-.65,-.2);
   cube.matrix.rotate(-30 + angles.legBL_j1,0,0,1);
   m_parent.set(cube.matrix);
-  cube.matrix.scale(.2,length,.15);
+  cube.matrix.scale(.2,length,.2);
   cube.render();
 
   // bl leg segment 2
@@ -213,16 +240,18 @@ function renderAllShapes() {
   cube.matrix.scale(.15,length,.15);
   cube.render();
 
-  /*
   // bl leg segment 4 (hoof)
+  cube.bottomW = 1.3;
+  cube.loadShape();
   cube.color = [0,0,0,1];
   cube.matrix.set(m_parent);
   cube.matrix.translate(0,-(length-.055),.0001);
-  cube.matrix.rotate(-45 + angles.legBL_j4,0,0,1);
-  length = 2.15;
-  cube.matrix.scale(.15,length,.15);
+  cube.matrix.rotate(5+angles.legBL_j4,0,0,1);
+  cube.matrix.scale(.15,.2,.15);
   cube.render();
-*/
+  cube.bottomW = 1;
+  cube.loadShape();
+
   /**/
   //#endregion
   
@@ -234,7 +263,7 @@ function renderAllShapes() {
   cube.matrix.translate(.4,-.65,.2);
   cube.matrix.rotate(-30 + angles.legBR_j1,0,0,1);
   m_parent.set(cube.matrix);
-  cube.matrix.scale(.2,length,.15);
+  cube.matrix.scale(.2,length,.2);
   cube.render();
 
   // br leg segment 2
@@ -248,13 +277,24 @@ function renderAllShapes() {
   cube.render();
 
   // br leg segment 3
-  cube.color = [.3,.3,.3,1];
   cube.matrix.set(m_parent);
   cube.matrix.translate(0,-(length-.055),.0001);
   cube.matrix.rotate(-45 + angles.legBR_j3,0,0,1);
+  m_parent.set(cube.matrix);
   length = 2.15;
   cube.matrix.scale(.15,length,.15);
   cube.render();
+
+  // br leg segment 4 (hoof)
+  cube.bottomW = 1.3;
+  cube.loadShape();
+  cube.matrix.set(m_parent);
+  cube.matrix.translate(0,-(length-.055),.0001);
+  cube.matrix.rotate(5+angles.legBR_j4,0,0,1);
+  cube.matrix.scale(.15,.2,.15);
+  cube.render();
+  cube.bottomW = 1;
+  cube.loadShape();
   //#endregion
   
   //#region FRONT LEFT LEG
@@ -265,7 +305,7 @@ function renderAllShapes() {
   cube.matrix.translate(-.4,-.65,-.2);
   cube.matrix.rotate(40 + angles.legFL_j1,0,0,1);
   m_parent.set(cube.matrix);
-  cube.matrix.scale(.2,length,.15);
+  cube.matrix.scale(.2,length,.2);
   cube.render();
 
   // fl leg segment 2
@@ -283,9 +323,21 @@ function renderAllShapes() {
   cube.matrix.set(m_parent);
   cube.matrix.translate(0,-(length-.055),.0001);
   cube.matrix.rotate(15 + angles.legFL_j3,0,0,1);
+  m_parent.set(cube.matrix);
   length = 1.7;
   cube.matrix.scale(.15,length,.15);
   cube.render();
+
+  // fl leg segment 4 (hoof)
+  cube.bottomW = 1.3;
+  cube.loadShape();
+  cube.matrix.set(m_parent);
+  cube.matrix.translate(0,-(length-.055),.0001);
+  cube.matrix.rotate(-2+angles.legFL_j4,0,0,1);
+  cube.matrix.scale(.15,.2,.15);
+  cube.render();
+  cube.bottomW = 1;
+  cube.loadShape();
   //#endregion
 
   //#region FRONT RIGHT LEG
@@ -296,7 +348,7 @@ function renderAllShapes() {
   cube.matrix.translate(-.4,-.65,.2);
   cube.matrix.rotate(40 + angles.legFR_j1,0,0,1);
   m_parent.set(cube.matrix);
-  cube.matrix.scale(.2,length,.15);
+  cube.matrix.scale(.2,length,.2);
   cube.render();
 
   // fr leg segment 2
@@ -314,10 +366,22 @@ function renderAllShapes() {
   cube.matrix.set(m_parent);
   cube.matrix.translate(0,-(length-.055),.0001);
   cube.matrix.rotate(15 + angles.legFR_j3,0,0,1);
+  m_parent.set(cube.matrix);
   length = 1.7;
   cube.matrix.scale(.15,length,.15);
   cube.render();
   /**/
+
+  // fr leg segment 4 (hoof)
+  cube.bottomW = 1.3;
+  cube.loadShape();
+  cube.matrix.set(m_parent);
+  cube.matrix.translate(0,-(length-.055),.0001);
+  cube.matrix.rotate(-2+angles.legFR_j4,0,0,1);
+  cube.matrix.scale(.15,.2,.15);
+  cube.render();
+  cube.bottomW = 1;
+  cube.loadShape();
   //#endregion
 
   //#region NECK
@@ -378,6 +442,7 @@ function renderAllShapes() {
   cube.loadShape();
 
   //#endregion
+  
   cube.matrix.setIdentity();
 }
 
