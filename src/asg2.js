@@ -23,20 +23,25 @@ let u_FragColor;
 let u_ModelMatrix;
 let u_GlobalRotateMatrix;
 let duration;
+let shift = false;
 
 const g_shapes_list = [];
 const g_vertices = [];
 let g_globalAngleY = 0;
 let g_globalAngleX = 0;
-let g_animate = true;
+let g_animate = false;
 let g_animReset = false;
 let g_startTime = performance.now();
-let g_currAnim = "walk";
+let g_currAnim = "jump";
 const g_zoom = .3;
 let g_rotMat;
 let cube;
+let cylinder;
 let m_body;
 let m_parent;
+let g_bodyY = 0;
+let g_fenceX = 0;
+let g_animPhase = 0;
 
 function main() {
   setupWebGL();
@@ -50,14 +55,6 @@ function main() {
   updateGlobalRot();
 
   requestAnimationFrame(tick);
-}
-
-function click(ev) {
-  if (ev.buttons != 1) return;
-
-  [x,y] = convertCoordinatesEventToGL(ev);
-
-  renderAllShapes();
 }
 
 function setupWebGL() {
@@ -154,7 +151,7 @@ function addActionsForHtmlUI() {
     renderAllShapes();
   });
 
-  document.getElementById("anim-on").onclick = () => {g_animate = true; g_animReset = false;};
+  document.getElementById("anim-on").onclick = () => { if (g_animate) {return;} g_currAnim = "run"; g_animate = true; g_animReset = false;};
   document.getElementById("anim-off").onclick = () => {g_animate = false};
 
   canvas.addEventListener("mousemove", (ev) => {
@@ -168,19 +165,30 @@ function addActionsForHtmlUI() {
 
   canvas.addEventListener("mousedown", (ev) => {
     if (ev.buttons != 1) return;
+    if (shift) { 
+      if (g_animate) return;
+      g_currAnim = "jump"; 
+      g_animate = true;
+      g_animReset = false;
+    }
     lastX = convertCoordinatesEventToGL(ev)[0];
   });
+
+  document.addEventListener('keydown', (ev) => { if (ev.key == 'Shift') { shift = true; }});
+  document.addEventListener('keyup', (ev) => { if (ev.key == 'Shift') { shift = false; }});
 }
 
 function updateGlobalRot() {
   g_rotMat.setRotate(g_globalAngleY,0,1,0);
   g_rotMat.rotate(g_globalAngleX,1,0,0);
   gl.uniformMatrix4fv(u_GlobalRotateMatrix,false,g_rotMat.elements);
+  if(!g_animate) renderAllShapes();
 }
 
 function createGeometries() {
   g_rotMat = new Matrix4();
   cube = new Cube();
+  cylinder = new Cylinder();
   m_body = new Matrix4();
   m_parent = new Matrix4();
 }
@@ -200,7 +208,7 @@ function renderAllShapes() {
 
   //#region BODY
   cube.color = [1.0,1.0,1.0,1.0];
-  cube.matrix.translate(0,.5,0);
+  cube.matrix.translate(0,.5 + g_bodyY,0);
   cube.matrix.rotate(angles.body,0,0,1);
   cube.matrix.scale(g_zoom,g_zoom,g_zoom);
   m_body.set(cube.matrix);
@@ -443,6 +451,40 @@ function renderAllShapes() {
 
   //#endregion
   
+  //#region FENCE
+
+  // fence post 1
+  cylinder.color = [0.55, 0.27, 0.07, 1.0];
+  cylinder.matrix.setIdentity();
+  cylinder.matrix.translate(g_fenceX-.7,-.475,-.2);
+  cylinder.matrix.scale(g_zoom,g_zoom,g_zoom);
+  cylinder.matrix.scale(.1,.8,.1);
+  cylinder.render();
+
+  // fence post 2
+  cylinder.matrix.setIdentity();
+  cylinder.matrix.translate(g_fenceX-.7,-.475,.2);
+  cylinder.matrix.scale(g_zoom,g_zoom,g_zoom);
+  cylinder.matrix.scale(.1,.8,.1);
+  cylinder.render();
+
+  // fence rail 1 (top)
+  cylinder.matrix.setIdentity();
+  cylinder.matrix.translate(g_fenceX-.7,-.525,.24);
+  cylinder.matrix.rotate(90,90,0,1);
+  cylinder.matrix.scale(g_zoom,g_zoom,g_zoom);
+  cylinder.matrix.scale(.1,1.6,.1);
+  cylinder.render();
+
+  // fence rail 2 (bottom)
+  cylinder.matrix.setIdentity();
+  cylinder.matrix.translate(g_fenceX-.7,-.625,.24);
+  cylinder.matrix.rotate(90,90,0,1);
+  cylinder.matrix.scale(g_zoom,g_zoom,g_zoom);
+  cylinder.matrix.scale(.1,1.6,.1);
+  cylinder.render();
+  //#endregion
+
   cube.matrix.setIdentity();
 }
 
@@ -467,13 +509,21 @@ function tick() {
   requestAnimationFrame(tick);
 }
 
-function animate() {
+function animate1() {
   if (!g_animate) {
     resetAnimation();
     return;
   }
 
-  const speed = performance.now()/1000 * 8;
+  let speed = anims[g_currAnim].speed;
+  if (g_currAnim == 'jump') {
+    if (animationTime >= Math.PI) { g_animate = false; animationTime = 0; return; } 
+    speed *= animationTime;
+    animationTime += duration/1000;
+  } else {
+    speed *= performance.now()/1000;
+  }
+
   const s = Math.sin(speed);
   const c = Math.cos(speed);
   for (let joint in anims[g_currAnim].joints) {
@@ -487,11 +537,53 @@ function animate() {
   renderAllShapes();
 }
 
+function animate() {
+  if (!g_animate) {
+    resetAnimation();
+    return;
+  }
+
+  const speed = anims[g_currAnim].speed;
+  const delta = duration / 1000;
+
+  if (g_currAnim === 'jump') {
+    g_animPhase += speed * delta;
+
+    if (g_animPhase >= 2*Math.PI) {
+      g_animPhase = 0;
+      g_animate = false;
+      return;
+    }
+
+    const fenceInfo = anims[g_currAnim].fenceX;
+    g_fenceX = fenceInfo.max * g_animPhase / (Math.PI*2);
+  } else {
+    g_animPhase = speed * performance.now() / 1000;
+  }
+
+  const c1 = 1 - Math.cos(g_animPhase);
+  const c = Math.cos(g_animPhase);
+  const s = Math.sin(g_animPhase);
+
+  for (let joint in anims[g_currAnim].joints) {
+    const jointInfo = anims[g_currAnim].joints[joint];
+    angles[joint] = jointInfo.max * ((jointInfo.curve === "sin") ? s : (jointInfo.curve == "cos") ? c : c1);
+  }
+
+  const bodyInfo = anims[g_currAnim].translateY
+  g_bodyY = bodyInfo.max * ((bodyInfo.curve === "sin") ? s : (bodyInfo.curve == "cos") ? c : c1);
+
+  renderAllShapes();
+}
+
 function resetAnimation() {
   if (!g_animReset) {
     for (let joint in angles) {
       angles[joint] = 0;
     }
+    g_bodyY = 0;
+    g_fenceX = 0;
+    g_animPhase = 0;
     g_animReset = true;
     renderAllShapes();
   }
